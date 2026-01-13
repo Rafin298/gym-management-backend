@@ -15,17 +15,34 @@ class GymBranch(models.Model):
     def __str__(self):
         return f"{self.name} - {self.location}"
     
+    @property
     def trainer_count(self):
         """Get count of trainers in this branch"""
         return self.users.filter(role='TRAINER').count()
     
+    @property
+    def manager_count(self):
+        """Get count of managers in this branch"""
+        return self.users.filter(role='MANAGER').count()
+    
     def can_add_trainer(self):
         """Check if branch can have more trainers (max 3)"""
-        return self.trainer_count() < 3
+        return self.trainer_count < 3
+    
+    def can_add_manager(self):
+        """Check if branch can have more managers (max 1)"""
+        return self.manager_count < 1
     
     def validate_trainer_limit(self):
         """Validate trainer limit before adding"""
         if not self.can_add_trainer():
             raise ValidationError(
-                f'This gym branch already has {self.trainer_count()} trainers. Maximum allowed is 3.'
+                f'This gym branch already has {self.trainer_count} trainers. Maximum allowed is 3.'
+            )
+    
+    def validate_manager_limit(self):
+        """Validate manager limit before adding"""
+        if not self.can_add_manager():
+            raise ValidationError(
+                f'This gym branch already has a manager. Maximum allowed is 1.'
             )

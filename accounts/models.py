@@ -11,6 +11,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+        user.full_clean()
         user.save(using=self._db)
         return user
     
@@ -66,5 +67,5 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise ValidationError(f'{self.get_role_display()} must be assigned to a gym branch')
     
     def save(self, *args, **kwargs):
-        self.full_clean()
+        # self.full_clean()
         super().save(*args, **kwargs)
