@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from .models import User
 from .serializers import UserSerializer, UserProfileSerializer, LoginSerializer
 from .permissions import IsManager, IsSuperAdmin
-
+from rest_framework.pagination import PageNumberPagination
 
 class LoginView(APIView):
     """User login endpoint"""
@@ -70,9 +70,12 @@ class UserListCreateView(APIView):
         role = request.query_params.get('role')
         if role:
             users = users.filter(role=role.upper())
-        
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+    
+        paginator = PageNumberPagination()
+
+        page = paginator.paginate_queryset(users, request)
+        serializer = UserSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create trainer or member for manager's branch"""
@@ -124,8 +127,11 @@ class SuperAdminUserView(APIView):
         if branch_id:
             users = users.filter(gym_branch_id=branch_id)
         
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+
+        page = paginator.paginate_queryset(users, request)
+        serializer = UserSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create manager or any other user"""

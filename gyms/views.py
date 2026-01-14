@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import GymBranch
 from .serializers import GymBranchSerializer
 from accounts.permissions import IsSuperAdmin
+from rest_framework.pagination import PageNumberPagination
 
 
 class GymBranchListCreateView(APIView):
@@ -16,8 +17,11 @@ class GymBranchListCreateView(APIView):
     def get(self, request):
         """List all gym branches"""
         branches = GymBranch.objects.all()
-        serializer = GymBranchSerializer(branches, many=True)
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+
+        page = paginator.paginate_queryset(branches, request)
+        serializer = GymBranchSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create a new gym branch"""

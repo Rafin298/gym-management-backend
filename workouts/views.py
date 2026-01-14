@@ -8,7 +8,7 @@ from .serializers import (
     WorkoutTaskSerializer, 
     WorkoutTaskUpdateSerializer
 )
-
+from rest_framework.pagination import PageNumberPagination
 
 class WorkoutPlanListCreateView(APIView):
     """
@@ -33,8 +33,12 @@ class WorkoutPlanListCreateView(APIView):
             )
         
         plans = plans.select_related('created_by', 'gym_branch')
-        serializer = WorkoutPlanSerializer(plans, many=True)
-        return Response(serializer.data)
+        # serializer = WorkoutPlanSerializer(plans, many=True)
+        # return Response(serializer.data)
+        paginator = PageNumberPagination()
+        page = paginator.paginate_queryset(plans, request)
+        serializer = WorkoutPlanSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create workout plan (Trainer only)"""
@@ -71,9 +75,8 @@ class WorkoutTaskListCreateView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """List workout tasks based on user role"""
         user = request.user
-        
+
         if user.role == 'SUPER_ADMIN':
             tasks = WorkoutTask.objects.all()
         elif user.role == 'MEMBER':
@@ -89,20 +92,22 @@ class WorkoutTaskListCreateView(APIView):
                 {'detail': 'Unauthorized'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Optional status filter
         task_status = request.query_params.get('status')
         if task_status:
             tasks = tasks.filter(status=task_status.upper())
-        
+
         tasks = tasks.select_related(
-            'workout_plan', 
-            'member', 
+            'workout_plan',
+            'member',
             'workout_plan__gym_branch'
         )
-        
-        serializer = WorkoutTaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+
+        page = paginator.paginate_queryset(tasks, request)
+        serializer = WorkoutTaskSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create and assign workout task (Trainer only)"""
