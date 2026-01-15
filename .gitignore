@@ -81,11 +81,6 @@ htmlcov/
 .coverage
 coverage.xml
 
-# ===============================
-# Database dumps (optional)
-# ===============================
-*.sql
-*.dump
 
 # ===============================
 # Misc
